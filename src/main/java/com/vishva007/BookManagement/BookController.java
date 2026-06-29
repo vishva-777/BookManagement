@@ -18,7 +18,8 @@ public class BookController {
 
     @GetMapping("/{id}")
     public Book findById(@PathVariable Long id) {
-        return bookRepository.findById(id).orElse(null);
+        return bookRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Book not found with id " + id));
     }
 
     @PostMapping
@@ -28,7 +29,8 @@ public class BookController {
 
     @PutMapping("/{id}")
     public Book update(@PathVariable Long id, @RequestBody Book book) {
-        Book existing = bookRepository.findById(id).orElse(null);
+        Book existing = bookRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Book not found with id " + id));
         if(existing != null) {
             existing.setTitle(book.getTitle());
             existing.setPrice(book.getPrice());
@@ -39,7 +41,7 @@ public class BookController {
 
     @DeleteMapping("/{id}")
     public String delete(@PathVariable Long id) {
-        bookRepository.findById(id).orElse(null);
+        bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book not found with id " + id));
         bookRepository.deleteById(id);
         return "Book has been deleted";
     }

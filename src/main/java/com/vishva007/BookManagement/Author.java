@@ -2,6 +2,8 @@ package com.vishva007.BookManagement;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.*;
 
 @Entity
 @Table(name = "author")
@@ -11,6 +13,7 @@ public class Author {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Author name is required")
     private String name;
 
 

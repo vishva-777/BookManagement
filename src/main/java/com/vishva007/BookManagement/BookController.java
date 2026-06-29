@@ -1,5 +1,6 @@
 package com.vishva007.BookManagement;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -23,12 +24,12 @@ public class BookController {
     }
 
     @PostMapping
-    public Book create(@RequestBody Book book) {
+    public Book create(@Valid @RequestBody Book book) {
         return bookRepository.save(book);
     }
 
     @PutMapping("/{id}")
-    public Book update(@PathVariable Long id, @RequestBody Book book) {
+    public Book update(@PathVariable Long id, @Valid @RequestBody Book book) {
         Book existing = bookRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Book not found with id " + id));
         if(existing != null) {

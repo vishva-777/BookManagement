@@ -1,9 +1,10 @@
 package com.vishva007.BookManagement;
 
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.*;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "author")
@@ -17,10 +18,9 @@ public class Author {
     private String name;
 
 
-    @ManyToOne
-    @JoinColumn(name = "book_id")
-    @JsonBackReference
-    private Book book1;
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<Book> books;
 
 
     public Long getId() { return id; }
@@ -29,6 +29,6 @@ public class Author {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public Book getBook1() { return book1; }
-    public void setBook1(Book book1) { this.book1 = book1; }
+    public List<Book> getBooks() { return books; }
+    public void setBooks(List<Book> books) { this.books = books; }
 }

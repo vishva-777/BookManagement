@@ -32,12 +32,11 @@ public class BookController {
     public Book update(@PathVariable Long id, @Valid @RequestBody Book book) {
         Book existing = bookRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Book not found with id " + id));
-        if(existing != null) {
-            existing.setTitle(book.getTitle());
-            existing.setPrice(book.getPrice());
-            return bookRepository.save(existing);
-        }
-        return null;
+        existing.setTitle(book.getTitle());
+        existing.setDescription(book.getDescription());
+        existing.setPrice(book.getPrice());
+        existing.setAuthor(book.getAuthor());
+        return bookRepository.save(existing);
     }
 
     @DeleteMapping("/{id}")

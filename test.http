@@ -1,0 +1,14 @@
+### Get all books
+GET http://localhost:8090/books
+Authorization: Basic admin admin123
+
+### Create new book
+POST http://localhost:8090/books
+Content-Type: application/json
+Authorization: Basic admin admin123
+
+{
+  "title": "New Book",
+  "description": "Test description",
+  "price": 299
+}

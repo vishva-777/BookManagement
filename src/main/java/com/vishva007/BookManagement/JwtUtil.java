@@ -5,12 +5,15 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
+import java.util.Base64;
 
 @Component
 public class JwtUtil {
 
-    //Secret key - used to sign and verify tokens
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    // Fixed secret string - later this moves to application.properties
+    private final String SECRET = "your-fixed-secret-string-here-make-it-long-and-random";
+    private final Key key = Keys.hmacShaKeyFor(Base64.getEncoder().encode(SECRET.getBytes()));
+
 
     //token valid for 1hour
     private final long EXPIRATION = 1000 * 60 * 60;

@@ -28,8 +28,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
+        //step:2
+        //Hacker sends:checks the header unauthorization: Bearer eyJhbGci...FAKE...abc
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+            String token = authHeader.substring(7);//-->  removes "Bearer " (7 characters)
+            //leaves just the token and (step:3)it goes to jwtUtil
 
             try {
                 if (jwtUtil.validateToken(token)) {

@@ -7,14 +7,19 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+@RestController //-->tells Spring "this class handles web requests and sends back data
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    @Autowired //--> itself does only one job: it tells Spring "give me a ready-made object of this type,
+    // I don't want to build it myself." That's it.
+    // It doesn't check passwords, it doesn't generate tokens — it just fetches and connects the object.
+
+    private AuthenticationManager authenticationManager; //-->this is Spring's built-in "password checker.
+    // " You don't write the checking logic yourself; Spring already has a tool for it, we just plug it in here.
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtUtil jwtUtil; //-->this is your file from before — the ticket printer.
+    // We're using it here to generate the token after login succeeds.
 
     @PostMapping("/login")
     public String login(@RequestBody LoginRequest loginRequest) {

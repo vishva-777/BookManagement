@@ -8,15 +8,18 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
+import org.springframework.beans.factory.annotation.Value;
 
 @Component
 public class JwtUtil {
-     // a fixed text string, hardcoded
-    private final String SECRET = "your-fixed-secret-string-here-make-it-long-and-random";
 
-    //  converts that plain text string into the proper Key object format JJWT needs. getBytes() turns text into raw bytes,
-    //  Base64.encode reformats those bytes into a specific encoding JJWT expects, hmacShaKeyFor wraps it into a usable Key.
-    private final Key key = Keys.hmacShaKeyFor(Base64.getEncoder().encode(SECRET.getBytes()));
+     @Value("${JWT_SECRET}")
+     private String SECRET;
+
+
+    private Key getKey() {
+        return Keys.hmacShaKeyFor(Base64.getEncoder().encode(SECRET.getBytes()));
+    }
 
     private final long EXPIRATION = 1000 * 60 * 60;
 
@@ -29,13 +32,13 @@ public class JwtUtil {
                 .setSubject(username)
                 .claim("role", role)
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(key)
+                .signWith(getKey())
                 .compact();
     }
     //the "ticket reader." Given a token, it unlocks the payload using key and pulls out the username (getSubject()).A
     public String extractUsername(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
@@ -45,7 +48,7 @@ public class JwtUtil {
     // NEW METHOD - extract role from token
     public String extractRole(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
@@ -58,7 +61,7 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         try {
             //step:3 tries to verify signature if signature is match r unmatch(throw exception)
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
             return false;

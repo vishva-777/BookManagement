@@ -29,7 +29,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/error").permitAll()
+                        .requestMatchers("/login", "/error").permitAll()// --> step1 : users login and it go authcontrooler
                         .requestMatchers(HttpMethod.GET, "/books", "/books/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/author", "/author/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/books/**").hasRole("ADMIN")
@@ -46,7 +46,8 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+        return config.getAuthenticationManager(); //--> step4:the authentification manager holds the java object and
+        //extract the username and send to the userdetails services
     }
 
     @Bean
@@ -54,9 +55,10 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
-        UserDetails admin = User.withUsername("admin")
+    @Bean  //-->
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) { //step-5-->it will store username from the
+        //authentificationmanager
+        UserDetails admin = User.withUsername("admin")//-->step7
                 .password(passwordEncoder.encode("vishva007"))
                 .roles("ADMIN")
                 .build();
@@ -66,6 +68,7 @@ public class SecurityConfig {
                 .roles("USER")
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, user);
+        return new InMemoryUserDetailsManager(admin, user);//-step6:The InMemoryUserDetailsManager checks the username
+        //is exist in the userdetails if exist it returns the userdetails
     }
 }

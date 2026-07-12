@@ -27,13 +27,21 @@ public class JwtUtil {
     // sets subject (who this ticket belongs to), issued-at (when it was made),
     // expiration (when it dies), signs it with your key,
     // and .compact() squishes it all into the final header.payload.signature string.
-    public String generateToken(String username, String role) {
-        return Jwts.builder()
+
+    public String generateToken(String username, String role) { //-->step8:Takes two inputs:
+        // the username (e.g. "admin") and the role string (e.g. "ROLE_ADMIN") —
+        // this is what AuthController passes in after a successful login.
+        return Jwts.builder()//-->.builder() gives you a builder object—think of it as an empty form you fill in
+                // step by step before finalizing.
                 .setSubject(username)
-                .claim("role", role)
+                .claim("role", role)//--> Here you're adding "role": "ROLE_ADMIN" into the payload.
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(getKey())
-                .compact();
+                .signWith(getKey())//-->getKey(), which reads from your JWT_SECRET environment variable
+                .compact();//-->Takes the fully-built token — header, payload, signature — and squishes it all into the
+                // final single string format:
+                // header.payload.signature,
+                // each part separately Base64-encoded and joined by dots.
+                // This is the actual JWT string that gets returned to the client.
     }
     //the "ticket reader." Given a token, it unlocks the payload using key and pulls out the username (getSubject()).A
     public String extractUsername(String token) {

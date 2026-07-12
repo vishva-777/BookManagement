@@ -26,18 +26,24 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization"); //-->Reads the header the client sent —
+        // expects something like Authorization: Bearer eyJhbGci...
 
-        //step:2
-        //Hacker sends:checks the header unauthorization: Bearer eyJhbGci...FAKE...abc
+
+        //Guard's first check: is there even a badge?
+        // If no header, or it doesn't start with "Bearer ",
+        // this whole block is skipped — meaning no authentication gets set.
+        // Request continues anonymously.
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);//-->  removes "Bearer " (7 characters)
             //leaves just the token and (step:3)it goes to jwtUtil
 
             try {
-                if (jwtUtil.validateToken(token)) {
+                if (jwtUtil.validateToken(token)) { //-->Asks the ticket-checker: is this signature valid and not expired?
+
+                    //Pulls both pieces of identity out of the token payload — no DB call happening here, notice.
                     String username = jwtUtil.extractUsername(token);
-                    String role = jwtUtil.extractRole(token); // ← extract role
+                    String role = jwtUtil.extractRole(token);
 
                     // pass role as authority
                     List<SimpleGrantedAuthority> authorities =
@@ -54,6 +60,6 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(request, response);//-->Passes control onward — to the next filter, and eventually your Controller.
     }
 }

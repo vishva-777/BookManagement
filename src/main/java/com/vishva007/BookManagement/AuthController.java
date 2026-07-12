@@ -6,6 +6,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 @RestController //-->tells Spring "this class handles web requests and sends back data
 public class AuthController {
@@ -22,8 +23,8 @@ public class AuthController {
     // We're using it here to generate the token after login succeeds.
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
+    public String login(@Valid @RequestBody LoginRequest loginRequest) { //-->step2:it will convert the json into java object
+        Authentication authentication = authenticationManager.authenticate( //-->step3:it will handover the java object to authentificationmanager in securityconfig
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
                         loginRequest.getPassword()

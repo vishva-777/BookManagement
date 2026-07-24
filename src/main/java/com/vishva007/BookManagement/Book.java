@@ -25,6 +25,19 @@ public class Book {
     @Min(value = 1, message = "Price must be at least 1")
     private Integer price;
 
+    @Column(name = "cover_image_url")
+    private String coverImageUrl;
+
+    public String getCoverImageUrl() {
+        return coverImageUrl;
+    }
+
+    public void setCoverImageUrl(String url) {
+        if (url != null && !url.startsWith("https://")) {
+            throw new IllegalArgumentException("Cover image URL must start with https://");
+        }
+        this.coverImageUrl = url;
+    }
     @ManyToOne
     @JoinColumn(name = "author_id")
     @JsonBackReference

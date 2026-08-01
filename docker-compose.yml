@@ -1,0 +1,31 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_DATABASE: Bookdb
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: vishva007
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8090:8090"
+    environment:
+      DB_URL: jdbc:mysql://db:3306/Bookdb
+      DB_PASSWORD: vishva007
+      DB_ADMIN_PASSWORD: admin123
+      JWT_SECRET: xEq5iTkBpwhG/BAR2HYDWhHQUzAxacQKRItiQdc5x4k=
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

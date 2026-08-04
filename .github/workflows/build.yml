@@ -44,5 +44,4 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo kill -9 $(sudo lsof -t -i:8090) || true
-            nohup java -jar /home/ubuntu/BookManagement-0.0.1-SNAPSHOT.jar > /home/ubuntu/app.log 2>&1 &
+            sudo systemctl restart bookmanagement.service

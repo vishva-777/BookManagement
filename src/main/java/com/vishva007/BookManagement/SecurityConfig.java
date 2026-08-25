@@ -1,5 +1,6 @@
 package com.vishva007.BookManagement;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,9 @@ public class SecurityConfig {
 
     @Autowired
     private JwtFilter jwtFilter;
+
+    @Value("${DB_ADMIN_PASSWORD}")
+    private String adminPassword;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -55,11 +59,10 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean  //-->
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) { //step-5-->it will store username from the
-        //authentificationmanager
-        UserDetails admin = User.withUsername("admin")//-->step7
-                .password(passwordEncoder.encode("vishva007"))
+    @Bean
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+        UserDetails admin = User.withUsername("admin")
+                .password(passwordEncoder.encode(adminPassword))
                 .roles("ADMIN")
                 .build();
 
@@ -68,7 +71,7 @@ public class SecurityConfig {
                 .roles("USER")
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, user);//-step6:The InMemoryUserDetailsManager checks the username
+        return new InMemoryUserDetailsManager(admin, user);
+    }//-step6:The InMemoryUserDetailsManager checks the username
         //is exist in the userdetails if exist it returns the userdetails
     }
-}

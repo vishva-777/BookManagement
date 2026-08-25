@@ -7,7 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class BookManagementApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BookManagementApplication.class, args);
+		SpringApplication app = new SpringApplication(BookManagementApplication.class);
+		app.addInitializers(new com.vishva007.BookManagement.config.SecretsManagerInitializer());
+		app.run(args);
 	}
-
 }

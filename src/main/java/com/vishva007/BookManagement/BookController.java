@@ -1,5 +1,6 @@
 package com.vishva007.BookManagement;
 
+import com.vishva007.BookManagement.config.SqsPublisher;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,8 @@ public class BookController {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private SqsPublisher sqsPublisher;
     @GetMapping
     public List<Book> findAll() {
         return bookRepository.findAll();
@@ -25,7 +28,9 @@ public class BookController {
 
     @PostMapping
     public Book create(@Valid @RequestBody Book book) {
-        return bookRepository.save(book);
+        Book savedBook = bookRepository.save(book);
+        sqsPublisher.sendBookAddedMessage(savedBook.getTitle());
+        return savedBook;
     }
 
     @PutMapping("/{id}")

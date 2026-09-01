@@ -1,4 +1,4 @@
-package com.vishva007.BookManagement.controller;
+package com.vishva007.BookManagement;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

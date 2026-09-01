@@ -8,7 +8,7 @@ public class BookManagementApplication {
 
 	public static void main(String[] args) {
 		SpringApplication app = new SpringApplication(BookManagementApplication.class);
-		app.addInitializers(new com.vishva007.BookManagement.config.SecretsManagerInitializer());
+		//app.addInitializers(new com.vishva007.BookManagement.config.SecretsManagerInitializer());
 		app.run(args);
 	}
 }

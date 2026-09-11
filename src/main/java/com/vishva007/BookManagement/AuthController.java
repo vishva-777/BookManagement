@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import java.util.Map;
 
 @RestController //-->tells Spring "this class handles web requests and sends back data
 public class AuthController {
@@ -23,7 +24,7 @@ public class AuthController {
     // We're using it here to generate the token after login succeeds.
 
     @PostMapping("/login")
-    public String login(@Valid @RequestBody LoginRequest loginRequest) { //-->step2:it will convert the json into java object
+    public Map<String, String> login (@Valid @RequestBody LoginRequest loginRequest) { //-->step2:it will convert the json into java object
         Authentication authentication = authenticationManager.authenticate( //-->step3:it will handover the java object to authentificationmanager in securityconfig
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -38,6 +39,6 @@ public class AuthController {
                 .map(GrantedAuthority::getAuthority)
                 .orElse("ROLE_USER");
 
-        return jwtUtil.generateToken(loginRequest.getUsername(), role);
+        return Map.of("token", jwtUtil.generateToken(loginRequest.getUsername(), role));
     }
 }

@@ -1,1 +1,6 @@
-﻿{"title":"Test Book for SQS","description":"Testing async notification","price":199}
+﻿{
+  "title": "Test Book Day 68",
+  "description": "End-to-end test book",
+  "price": 299,
+  "author": { "id": 3 }
+}

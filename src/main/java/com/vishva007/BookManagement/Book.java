@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.*;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Entity
 @Table(name = "books")
 public class Book {
@@ -40,7 +40,7 @@ public class Book {
     }
     @ManyToOne
     @JoinColumn(name = "author_id")
-    @JsonBackReference
+    @JsonIgnoreProperties({"books"})
     private Author author;
 
     public Author getAuthor() { return author; }

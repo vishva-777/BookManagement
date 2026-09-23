@@ -1,138 +1,96 @@
 # BookManagement
 
-A full-stack book management system built as a hands-on microservices + React
-project — covers service discovery, an API gateway, async messaging, JWT
-auth, and a deployed full-stack app on AWS.
+A full-stack book cataloging system built as a **microservices architecture** on AWS, demonstrating production-style patterns: service discovery (Eureka), a central API Gateway, JWT authentication, async messaging (SQS), and secrets management — not just CRUD.
 
-**Live app:** http://vishva-bookmanagement-frontend.s3-website.eu-north-1.amazonaws.com
+Three independently deployable Spring Boot services (BookManagement, Eureka Server, API Gateway) run behind a single gateway, with a React frontend deployed on S3 and a MySQL database on RDS. Includes CI/CD via GitHub Actions and real production debugging (OOM handling, systemd, CORS, IAM least-privilege).
 
 ## Architecture
 
 ```
-┌─────────────────────┐
-│  React frontend      │  S3 Static Website Hosting
-│  (bookmanagement-    │
-│   fronted)            │
-└──────────┬───────────┘
-           │ HTTPS/HTTP (JWT Bearer token)
-           ▼
-┌─────────────────────┐      ┌──────────────────┐
-│   api-gateway         │◄────►│  eureka-server     │
-│   (Spring Cloud       │      │  (service registry)│
-│    Gateway, webflux)  │      └──────────────────┘
-└──────────┬───────────┘
-           │ routed via Eureka discovery
-           ▼
-┌─────────────────────┐      ┌──────────────────┐
-│   BookManagement       │─────►│  MySQL (RDS)       │
-│   (Spring Boot,        │      └──────────────────┘
-│    JWT auth, CRUD)     │
-└──────────┬───────────┘
-           │ async (fire-and-forget)
-           ▼
-┌─────────────────────┐
-│   SQS queue            │  book-thumbnail-queue
-└─────────────────────┘
+React Frontend (S3)
+        │
+        ▼
+   API Gateway (Spring Cloud Gateway, port 8080)
+        │  looks up real service address via Eureka
+        ▼
+Eureka Server (Service Registry, port 8761)
+        │
+        ▼
+BookManagement Service (port 8090)
+   ├── MySQL (RDS) — book/author data
+   ├── AWS Secrets Manager — DB credentials, JWT secret
+   └── AWS SQS (book-thumbnail-queue) — async thumbnail notifications
 ```
 
-All three backend services (`eureka-server`, `BookManagement`, `api-gateway`)
-run as independent systemd services on a single EC2 instance
-(`vishva-server-1`), each in its own process — independently deployable, cost
-kept down by sharing one Free Tier box.
+**Request flow:** The React app never talks to BookManagement directly — every request goes to the API Gateway, which asks Eureka for BookManagement's current address and forwards the call. This means only the Gateway needs public exposure; BookManagement, Eureka, and the database stay VPC-private.
 
-## Tech stack
+**Deployment:** All three backend services run as independent systemd services on a single EC2 instance (t3.micro, Free Tier), each with capped JVM heap and swap enabled to survive running three JVMs on ~1GB RAM. GitHub Actions handles CI/CD for BookManagement on every push to `master`.
 
-- **Backend:** Java 21, Spring Boot 3.5, Spring Security (JWT), Spring Data
-  JPA/Hibernate, Spring Cloud (Eureka, Gateway)
-- **Database:** MySQL on AWS RDS
-- **Messaging:** AWS SQS (async notifications on book creation)
-- **Frontend:** React 18 (Vite), plain `fetch`, `useState`/`useEffect`,
-  `localStorage` for session persistence
-- **Infra:** AWS EC2, RDS, S3 (static hosting), Secrets Manager, IAM
-- **CI/CD:** GitHub Actions (BookManagement backend; auto build + deploy on
-  push to `master`)
+**Auth:** JWT-based — clients POST `/login` for a token, then attach `Authorization: Bearer <token>` on every protected request. No server-side session state.
 
-## Features
+## Tech Stack
 
-- JWT-based authentication (real login form, not hardcoded credentials)
-- Session persistence across page refresh (`localStorage`)
-- Full CRUD on books: create, read, update, delete — all reachable from the
-  UI, not just via API
-- Role-based authorization (`ROLE_ADMIN` / `ROLE_USER`)
-- Service discovery via Eureka — no hardcoded service addresses
-- Single public entry point via API Gateway
-- Async notification on book creation via SQS
-- CORS configured for both local dev (`localhost:5173`) and the deployed S3
-  origin
+**Backend**
+- Java, Spring Boot, Spring Security (JWT)
+- Spring Cloud Netflix Eureka (service discovery)
+- Spring Cloud Gateway (WebFlux/Netty)
+- Hibernate/JPA, MySQL
 
-## Repositories
+**Frontend**
+- React (Vite), fetch API, localStorage for token persistence
 
-| Repo | Purpose | CI/CD |
-|---|---|---|
-| [BookManagement](https://github.com/vishva-777/BookManagement) | Main Spring Boot API (books, auth) | GitHub Actions, auto-deploy to EC2 |
-| [eureka-server](https://github.com/vishva-777/eureka-server) | Service registry | Manual deploy |
-| [api-gateway](https://github.com/vishva-777/api-gateway) | Single entry point, routes via Eureka | Manual deploy |
-| [bookmanagement-fronted](https://github.com/vishva-777/bookmanagement-fronted) | React frontend | Manual build (`npm run build`) + S3 upload |
+**AWS**
+- EC2, RDS (MySQL), S3 (static hosting), SQS, Secrets Manager, IAM (least-privilege inline policies)
 
-## Running locally
+**DevOps**
+- GitHub Actions (CI/CD), systemd, Docker
 
-### Backend
-Each service needs its own AWS credentials (Secrets Manager access) to run
-against the real RDS instance — see each repo's own setup. Locally, comment
-out `SecretsManagerInitializer`'s registration in
-`BookManagementApplication.java` and supply DB credentials via environment
-variables instead (**remember to uncomment before pushing**).
+## Setup & Run Instructions
 
-```
+### Prerequisites
+- Java 17+, Maven
+- Node.js + npm
+- MySQL (or an AWS RDS instance)
+- AWS account (for Secrets Manager, SQS, S3 — optional for local-only testing)
+
+### 1. Eureka Server
+```bash
+cd eureka-server
 ./mvnw spring-boot:run
+# runs on http://localhost:8761
 ```
 
-### Frontend
+### 2. BookManagement (backend)
+```bash
+cd BookManagement
+# set environment variables: DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET
+./mvnw spring-boot:run
+# runs on http://localhost:8090
 ```
+
+### 3. API Gateway
+```bash
+cd api-gateway
+./mvnw spring-boot:run
+# runs on http://localhost:8080
+```
+
+### 4. Frontend
+```bash
 cd bookmanagement-fronted
 npm install
 npm run dev
+# runs on http://localhost:5173
 ```
-Opens on `http://localhost:5173`.
 
-## API overview
+### Usage
+- Register/login via the frontend (or `POST /login`) to get a JWT
+- All `/books` and `/author` endpoints require `Authorization: Bearer <token>`
 
-All endpoints except `/login`, `/error`, `/health` require a
-`Authorization: Bearer <token>` header.
+## Known Limitations / Future Work
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/login` | Authenticate, returns `{ "token": "..." }` |
-| GET | `/books` | List all books (requires USER or ADMIN) |
-| GET | `/books/{id}` | Get one book |
-| POST | `/books` | Create a book (`title`, `description`, `price`, `author: { id }`) |
-| PUT | `/books/{id}` | Update a book |
-| DELETE | `/books/{id}` | Delete a book (ADMIN only) |
-| GET | `/author` | List all authors |
-
-## Known limitations
-
-- The frontend's Edit form can't pre-fill the author ID, because
-  `Book.author` is annotated `@JsonBackReference` (to avoid an infinite
-  JSON loop with `Author.books`) and is never included in `GET /books`
-  responses. The author ID must be typed manually when editing a book.
-- `eureka-server` and `api-gateway` have no CI/CD yet — deploys are manual
-  (build JAR → scp → systemd restart).
-- The S3-hosted frontend is served over plain HTTP, no custom domain or
-  HTTPS (would need CloudFront + an ACM certificate).
-- `t3.micro` is memory-constrained running all three JVMs at once; a swap
-  file (permanently registered in `/etc/fstab`) keeps this stable, but
-  there's little headroom for further load.
-
-## Project history
-
-Built incrementally as part of a 90-day DevOps/AWS learning plan:
-
-- **Days 61–65** — microservices fundamentals: service discovery (Eureka),
-  API gateway pattern, sync vs. async communication (SQS), deployed all
-  three services together on one EC2 instance
-- **Days 66–68** — React frontend built from scratch, connected to the
-  Spring Boot backend, deployed publicly on S3
-- **Day 69** — real authentication (login form) and delete functionality
-- **Day 70** — full CRUD in the UI (add/edit), session persistence, logout,
-  and this documentation
+- **Author selection on Add/Edit** is by manual Author ID entry — no dropdown, since `/books` doesn't expose the full author list inline. A future improvement would add a `GET /author` dropdown to the form.
+- **CI/CD** is currently set up only for `BookManagement`; `eureka-server` and `api-gateway` are deployed manually and would benefit from their own GitHub Actions pipelines.
+- **bookmanagement.service** secrets are stored as plaintext environment variables in the systemd unit file rather than pulled fresh via Secrets Manager at runtime — a future cleanup item.
+- **Single EC2 instance** runs all three backend services together (cost-optimized for AWS Free Tier); a production setup would likely separate these or use ECS/EKS with proper autoscaling.
+- **No automated tests** yet — all verification so far has been manual/curl-based.
